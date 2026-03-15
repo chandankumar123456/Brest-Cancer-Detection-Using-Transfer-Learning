@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.pytest_cache/
+.mypy_cache/
+
+# Virtual environments
+venv/
+.venv/
+
+# OS
+.DS_Store
+
+# Logs and artifacts
+*.log
+backend/logs/
+backend/saved_model/
+
+# Jupyter
+.ipynb_checkpoints/
