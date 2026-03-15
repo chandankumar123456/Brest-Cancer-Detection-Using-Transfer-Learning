@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OnchoScan AI — Breast Cancer Detection</title>
+  <meta name="description" content="AI-powered breast cancer detection from histopathology images using EfficientNetB7 deep learning. Fast, accurate, and reliable diagnosis support." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Animated background orbs -->
+  <div class="bg-orbs" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="navbar glass-card" role="navigation" aria-label="Main navigation">
+    <div class="nav-brand">
+      <div class="brand-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <circle cx="14" cy="14" r="13" stroke="url(#g1)" stroke-width="2"/>
+          <path d="M8 14 C8 10.5 11 8 14 8 C17 8 20 10.5 20 14 C20 17.5 17 20 14 20" stroke="url(#g2)" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="14" cy="14" r="3" fill="url(#g1)"/>
+          <defs>
+            <linearGradient id="g1" x1="0" y1="0" x2="28" y2="28">
+              <stop stop-color="#a855f7"/>
+              <stop offset="1" stop-color="#06b6d4"/>
+            </linearGradient>
+            <linearGradient id="g2" x1="0" y1="0" x2="28" y2="28">
+              <stop stop-color="#a855f7"/>
+              <stop offset="1" stop-color="#06b6d4"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <span class="brand-name">OnchoScan <span class="brand-ai">AI</span></span>
+    </div>
+
+    <div class="nav-links" role="list">
+      <a href="#upload" class="nav-link" role="listitem">Analyze</a>
+      <a href="#about" class="nav-link" role="listitem">About</a>
+      <a href="#how-it-works" class="nav-link" role="listitem">How It Works</a>
+    </div>
+
+    <div id="model-status-badge" class="status-badge status-loading" role="status" aria-live="polite">
+      <span class="status-dot"></span>
+      <span class="status-text">Connecting…</span>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero" role="banner">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        Powered by EfficientNetB7 Transfer Learning
+      </div>
+      <h1 class="hero-title">
+        Detect Breast Cancer<br />
+        <span class="gradient-text">with Clinical-Grade AI</span>
+      </h1>
+      <p class="hero-subtitle">
+        Upload histopathology slide images for instant AI analysis. Our model, 
+        fine-tuned on 277K+ IDC patches, delivers <strong>~97% accuracy</strong> 
+        for Invasive Ductal Carcinoma detection.
+      </p>
+
+      <!-- Stats row -->
+      <div class="stats-row" role="list" aria-label="Model statistics">
+        <div class="stat-card glass-card" role="listitem">
+          <div class="stat-value">~97%</div>
+          <div class="stat-label">Accuracy</div>
+        </div>
+        <div class="stat-card glass-card" role="listitem">
+          <div class="stat-value">277K+</div>
+          <div class="stat-label">Training Images</div>
+        </div>
+        <div class="stat-card glass-card" role="listitem">
+          <div class="stat-value">B7</div>
+          <div class="stat-label">EfficientNet</div>
+        </div>
+        <div class="stat-card glass-card" role="listitem">
+          <div class="stat-value">&lt;1s</div>
+          <div class="stat-label">Inference Time</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Upload + Results Section -->
+  <main id="upload" class="main-section" role="main">
+
+    <div class="upload-results-grid">
+
+      <!-- Upload Panel -->
+      <section class="panel glass-card" aria-labelledby="upload-heading">
+        <div class="panel-header">
+          <h2 id="upload-heading" class="panel-title">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M10 3v10M6 7l4-4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 14v1a2 2 0 002 2h10a2 2 0 002-2v-1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Upload Image
+          </h2>
+          <p class="panel-subtitle">Supports JPEG, PNG, BMP, TIFF, WebP · Max 20MB</p>
+        </div>
+
+        <!-- Drop Zone -->
+        <div id="drop-zone" class="drop-zone" role="button" tabindex="0"
+             aria-label="Upload histopathology image" aria-describedby="drop-instructions">
+          <input type="file" id="file-input" accept="image/*" hidden aria-label="Select image file" />
+
+          <div id="drop-zone-content" class="drop-content">
+            <div class="drop-icon" aria-hidden="true">
+              <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+                <circle cx="28" cy="28" r="27" stroke="url(#dg)" stroke-width="2" stroke-dasharray="4 3"/>
+                <path d="M28 18v14M22 24l6-6 6 6" stroke="url(#dg)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M18 38h20" stroke="url(#dg)" stroke-width="2" stroke-linecap="round"/>
+                <defs>
+                  <linearGradient id="dg" x1="0" y1="0" x2="56" y2="56">
+                    <stop stop-color="#a855f7"/>
+                    <stop offset="1" stop-color="#06b6d4"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            <p class="drop-primary" id="drop-instructions">Drag & drop your histopathology image here</p>
+            <p class="drop-secondary">or</p>
+            <button id="browse-btn" class="btn btn-outline" type="button">Browse Files</button>
+          </div>
+
+          <!-- Image Preview -->
+          <div id="preview-content" class="preview-content hidden">
+            <img id="preview-img" src="" alt="Uploaded histopathology image preview" class="preview-image" />
+            <div class="preview-info">
+              <p id="preview-filename" class="preview-filename"></p>
+              <p id="preview-filesize" class="preview-filesize"></p>
+            </div>
+            <button id="change-btn" class="btn btn-ghost" type="button">Change Image</button>
+          </div>
+        </div>
+
+        <!-- Analyze Button -->
+        <button id="analyze-btn" class="btn btn-primary btn-full" type="button" disabled aria-disabled="true">
+          <span class="btn-text">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <circle cx="9" cy="9" r="8" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M6 9l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Analyze Image
+          </span>
+          <div class="btn-spinner hidden" aria-hidden="true"></div>
+        </button>
+
+        <!-- Disclaimer -->
+        <p class="disclaimer" role="note">
+          ⚠️ <strong>Clinical Disclaimer:</strong> This tool is for research and educational purposes only. 
+          Always consult a qualified pathologist for medical diagnosis.
+        </p>
+      </section>
+
+      <!-- Results Panel -->
+      <section id="results-panel" class="panel glass-card results-panel" aria-labelledby="results-heading" aria-live="polite">
+
+        <!-- Empty state -->
+        <div id="results-empty" class="results-empty">
+          <div class="results-empty-icon" aria-hidden="true">
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+              <circle cx="32" cy="32" r="30" stroke="rgba(168,85,247,0.3)" stroke-width="2"/>
+              <circle cx="32" cy="32" r="20" stroke="rgba(168,85,247,0.2)" stroke-width="2"/>
+              <circle cx="32" cy="32" r="10" stroke="rgba(168,85,247,0.2)" stroke-width="2"/>
+              <circle cx="32" cy="32" r="4" fill="rgba(168,85,247,0.4)"/>
+            </svg>
+          </div>
+          <h2 id="results-heading" class="results-empty-title">Awaiting Analysis</h2>
+          <p class="results-empty-text">Upload a histopathology image and click <strong>Analyze</strong> to see the AI prediction.</p>
+        </div>
+
+        <!-- Loading state -->
+        <div id="results-loading" class="results-loading hidden" aria-label="Analyzing image, please wait">
+          <div class="loading-animation" aria-hidden="true">
+            <div class="scanning-bar"></div>
+            <div class="pulse-rings">
+              <div class="pulse-ring"></div>
+              <div class="pulse-ring delay-1"></div>
+              <div class="pulse-ring delay-2"></div>
+            </div>
+          </div>
+          <p class="loading-text">Analyzing tissue patterns…</p>
+          <p class="loading-subtext">Running EfficientNetB7 inference</p>
+        </div>
+
+        <!-- Results state -->
+        <div id="results-content" class="results-content hidden" aria-label="Analysis results">
+          <div class="results-header">
+            <h2 id="results-heading-filled" class="panel-title">Analysis Results</h2>
+            <div id="result-badge" class="result-badge" aria-live="assertive"></div>
+          </div>
+
+          <!-- Big prediction display -->
+          <div id="prediction-display" class="prediction-display">
+            <div class="prediction-icon-wrap" id="prediction-icon-wrap" aria-hidden="true"></div>
+            <div class="prediction-label-wrap">
+              <div id="prediction-label" class="prediction-label"></div>
+              <div id="prediction-sub" class="prediction-sub"></div>
+            </div>
+          </div>
+
+          <!-- Confidence meter -->
+          <div class="confidence-section">
+            <div class="confidence-header">
+              <span class="confidence-title">Confidence Score</span>
+              <span id="confidence-pct" class="confidence-value"></span>
+            </div>
+            <div class="progress-track" role="progressbar" aria-labelledby="confidence-pct">
+              <div id="confidence-bar" class="progress-bar" style="width:0%"></div>
+            </div>
+          </div>
+
+          <!-- Probability breakdown -->
+          <div class="prob-section">
+            <h3 class="section-subtitle">Class Probabilities</h3>
+            <div class="prob-grid">
+              <div class="prob-item">
+                <div class="prob-label-row">
+                  <span class="prob-label">
+                    <span class="prob-dot benign-dot"></span> Benign (IDC−)
+                  </span>
+                  <span id="prob-benign-val" class="prob-val"></span>
+                </div>
+                <div class="progress-track">
+                  <div id="prob-benign-bar" class="progress-bar benign-bar" style="width:0%"></div>
+                </div>
+              </div>
+              <div class="prob-item">
+                <div class="prob-label-row">
+                  <span class="prob-label">
+                    <span class="prob-dot malignant-dot"></span> Malignant (IDC+)
+                  </span>
+                  <span id="prob-malignant-val" class="prob-val"></span>
+                </div>
+                <div class="progress-track">
+                  <div id="prob-malignant-bar" class="progress-bar malignant-bar" style="width:0%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Metadata -->
+          <div class="meta-section">
+            <h3 class="section-subtitle">Analysis Details</h3>
+            <div class="meta-grid">
+              <div class="meta-item">
+                <span class="meta-key">Model</span>
+                <span id="meta-model" class="meta-value mono"></span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-key">Image File</span>
+                <span id="meta-filename" class="meta-value mono"></span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-key">Input Size</span>
+                <span id="meta-imgsize" class="meta-value mono"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Explainability -->
+          <div id="explainability-section" class="explainability-section hidden">
+            <h3 class="section-subtitle">Grad-CAM Explainability</h3>
+            <p class="explainability-note">Highlighted regions indicate tissue areas that most influenced the model prediction.</p>
+            <img id="gradcam-image" class="gradcam-image" src="" alt="Grad-CAM heatmap overlay" />
+          </div>
+
+          <!-- Hospital Recommendations -->
+          <div id="hospital-section" class="hospital-section">
+            <h3 class="section-subtitle">Hospital Recommendation (LLM Assisted)</h3>
+            <p class="hospital-note">Enter your city or area to get nearby hospitals and AI-generated follow-up guidance.</p>
+            <div class="hospital-form-row">
+              <input
+                id="location-input"
+                class="location-input"
+                type="text"
+                placeholder="e.g., Hyderabad, Telangana"
+                aria-label="Enter your city or area for hospital recommendations"
+              />
+              <button id="recommend-btn" class="btn btn-outline" type="button">Find Hospitals</button>
+            </div>
+            <p id="hospital-status" class="hospital-status hidden" aria-live="polite"></p>
+            <div id="hospital-summary" class="hospital-summary hidden"></div>
+            <div id="hospital-list" class="hospital-list hidden"></div>
+          </div>
+
+          <!-- Re-analyze -->
+          <button id="reanalyze-btn" class="btn btn-outline btn-full" type="button">
+            Analyze Another Image
+          </button>
+        </div>
+
+        <!-- Error state -->
+        <div id="results-error" class="results-error hidden" role="alert">
+          <div class="error-icon" aria-hidden="true">⚠️</div>
+          <h3 class="error-title">Analysis Failed</h3>
+          <p id="error-message" class="error-message"></p>
+          <button id="retry-btn" class="btn btn-outline" type="button">Try Again</button>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- How It Works -->
+  <section id="how-it-works" class="info-section" aria-labelledby="how-heading">
+    <div class="info-container">
+      <h2 id="how-heading" class="section-title gradient-text">How It Works</h2>
+      <div class="steps-grid" role="list">
+        <div class="step-card glass-card" role="listitem">
+          <div class="step-number" aria-hidden="true">01</div>
+          <div class="step-icon" aria-hidden="true">🔬</div>
+          <h3 class="step-title">Upload Slide</h3>
+          <p class="step-desc">Upload a breast cancer histopathology image patch (50×50px or larger)</p>
+        </div>
+        <div class="step-card glass-card" role="listitem">
+          <div class="step-number" aria-hidden="true">02</div>
+          <div class="step-icon" aria-hidden="true">🧠</div>
+          <h3 class="step-title">AI Processing</h3>
+          <p class="step-desc">EfficientNetB7 extracts deep tissue features from the image in milliseconds</p>
+        </div>
+        <div class="step-card glass-card" role="listitem">
+          <div class="step-number" aria-hidden="true">03</div>
+          <div class="step-icon" aria-hidden="true">📊</div>
+          <h3 class="step-title">Prediction</h3>
+          <p class="step-desc">Receive a confidence-weighted prediction with full probability breakdown</p>
+        </div>
+        <div class="step-card glass-card" role="listitem">
+          <div class="step-number" aria-hidden="true">04</div>
+          <div class="step-icon" aria-hidden="true">👨‍⚕️</div>
+          <h3 class="step-title">Review</h3>
+          <p class="step-desc">Use AI insights to support (not replace) clinical pathologist review</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section id="about" class="info-section" aria-labelledby="about-heading">
+    <div class="info-container">
+      <h2 id="about-heading" class="section-title gradient-text">About the Model</h2>
+      <div class="about-grid">
+        <div class="about-card glass-card">
+          <h3 class="about-card-title">🏗️ Architecture</h3>
+          <p>EfficientNetB7 fine-tuned with a custom classification head: GlobalAveragePooling → Dense(512) → Dropout(0.5) → Dense(256) → Sigmoid output.</p>
+        </div>
+        <div class="about-card glass-card">
+          <h3 class="about-card-title">📁 Dataset</h3>
+          <p>Trained on the IDC (Invasive Ductal Carcinoma) Histopathology Dataset with 277,524 patches from 162 whole-mount slide scans of 50×50px resolution.</p>
+        </div>
+        <div class="about-card glass-card">
+          <h3 class="about-card-title">⚙️ Training Strategy</h3>
+          <p>Two-phase training: (1) Frozen base for head learning, (2) Top-30 layer fine-tuning with 1e-5 LR. Class weighting handles IDC imbalance.</p>
+        </div>
+        <div class="about-card glass-card">
+          <h3 class="about-card-title">📈 Performance</h3>
+          <p>Achieves ~95–97% accuracy and ~0.98 AUC on the IDC test set. Callbacks: EarlyStopping, ReduceLROnPlateau, ModelCheckpoint on best AUC.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer glass-card" role="contentinfo">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <span class="brand-name">OnchoScan <span class="brand-ai">AI</span></span>
+        <p class="footer-tagline">Advanced AI for breast cancer detection research</p>
+      </div>
+      <div class="footer-disclaimer" role="note">
+        <p>
+          <strong>⚠️ Research Tool Only.</strong> Not FDA approved. Not a substitute for professional medical advice, 
+          diagnosis, or treatment. Always seek the advice of qualified health providers.
+        </p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>Built with EfficientNetB7 · FastAPI · TensorFlow · © 2026 OnchoScan AI</p>
+    </div>
+  </footer>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast hidden" role="alert" aria-live="assertive"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
