@@ -14,6 +14,9 @@ from pydantic import BaseModel, Field
 import model as breast_model
 import hospital_recommender
 
+from dotenv import load_dotenv
+load_dotenv()
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)

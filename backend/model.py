@@ -18,7 +18,7 @@ IMG_SIZE = (224, 224)
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "saved_model", "breast_cancer_model.keras")
 DEFAULT_THRESHOLD = float(os.getenv("PREDICTION_THRESHOLD", "0.5"))
 
-_model = {}
+_models = {}
 
 
 def _model_label(model: tf.keras.Model) -> str:
@@ -146,7 +146,7 @@ def _make_gradcam_overlay(
     return base64.b64encode(buffer.getvalue()).decode("utf-8")
 
 
-def predict(image_bytes: bytes, include_heatmap: bool = False, threshold: float = DEFAULT_THRESHOLD): -> dict
+def predict(image_bytes: bytes, include_heatmap: bool = False, threshold: float = DEFAULT_THRESHOLD) -> dict:
     """
     Run ensemble prediction using EfficientNetB0, B3, and B7.
     """
@@ -199,7 +199,7 @@ def predict(image_bytes: bytes, include_heatmap: bool = False, threshold: float 
     return response
 
 
-def get_model_info(): -> dict
+def get_model_info() -> dict:
     models = load_model()
 
     if not models:
