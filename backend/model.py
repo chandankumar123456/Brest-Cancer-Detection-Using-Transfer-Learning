@@ -18,7 +18,7 @@ IMG_SIZE = (224, 224)
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "saved_model", "breast_cancer_model.keras")
 DEFAULT_THRESHOLD = float(os.getenv("PREDICTION_THRESHOLD", "0.5"))
 
-_model = None
+_models = {}
 
 
 def _model_label(model: tf.keras.Model) -> str:
@@ -32,20 +32,34 @@ def _model_label(model: tf.keras.Model) -> str:
     return model.name or "TransferLearningModel"
 
 
-def load_model() -> tf.keras.Model:
-    """Load the trained model from disk."""
-    global _model
-    if _model is not None:
-        return _model
+def load_model():
+    """
+    Load all trained models (B0, B3, B7) into memory.
+    """
+    global _models
 
-    if os.path.exists(MODEL_PATH):
-        logger.info(f"Loading model from {MODEL_PATH}")
-        _model = tf.keras.models.load_model(MODEL_PATH, compile=False)
-        logger.info("Model loaded successfully.")
-    else:
-        logger.warning("No saved model found. Please run train.py first.")
-        _model = None
-    return _model
+    if _models:
+        return _models
+
+    model_dir = os.path.join(os.path.dirname(__file__), "saved_model")
+
+    model_paths = {
+        "B0": os.path.join(model_dir, "model_B0.keras"),
+        "B3": os.path.join(model_dir, "model_B3.keras"),
+        "B7": os.path.join(model_dir, "model_B7.keras"),
+    }
+
+    for name, path in model_paths.items():
+        if os.path.exists(path):
+            logger.info(f"Loading model {name} from {path}")
+            _models[name] = tf.keras.models.load_model(path, compile=False)
+        else:
+            logger.warning(f"Model {name} not found at {path}")
+
+    if not _models:
+        logger.error("No trained models found. Train models first.")
+
+    return _models
 
 
 def preprocess_image(image_bytes: bytes) -> np.ndarray:
@@ -134,32 +148,38 @@ def _make_gradcam_overlay(
 
 def predict(image_bytes: bytes, include_heatmap: bool = False, threshold: float = DEFAULT_THRESHOLD) -> dict:
     """
-    Run inference on the given image bytes.
-    Returns a dict with prediction, confidence, and probabilities.
+    Run ensemble prediction using EfficientNetB0, B3, and B7.
     """
-    model = load_model()
+    models = load_model()
 
-    if model is None:
+    if not models:
         return {
-            "error": "Model not loaded. Please run train.py first.",
+            "error": "No trained models loaded.",
             "prediction": None,
             "confidence": None,
         }
 
     input_tensor = preprocess_image(image_bytes)
-    raw_output = model.predict(input_tensor, verbose=0)
 
-    # Model output: sigmoid → probability of IDC Positive (Malignant)
-    idc_positive_prob = float(raw_output[0][0])
-    idc_negative_prob = 1.0 - idc_positive_prob
+    probs = {}
+    for name, model in models.items():
+        pred = model.predict(input_tensor, verbose=0)
+        probs[name] = float(pred[0][0])
 
-    is_malignant = idc_positive_prob >= threshold
+    # Average probability from all models
+    avg_prob = sum(probs.values()) / len(probs)
+
+    idc_positive_prob = avg_prob
+    idc_negative_prob = 1 - avg_prob
+
+    is_malignant = avg_prob >= threshold
     label = "Malignant" if is_malignant else "Benign"
     confidence = idc_positive_prob if is_malignant else idc_negative_prob
 
+    # GradCAM will use the largest model (B7) if available
     gradcam_overlay = None
-    if include_heatmap:
-        gradcam_overlay = _make_gradcam_overlay(model, input_tensor)
+    if include_heatmap and "B7" in models:
+        gradcam_overlay = _make_gradcam_overlay(models["B7"], input_tensor)
 
     response = {
         "prediction": label,
@@ -167,27 +187,37 @@ def predict(image_bytes: bytes, include_heatmap: bool = False, threshold: float 
         "idc_positive_prob": round(idc_positive_prob, 4),
         "idc_negative_prob": round(idc_negative_prob, 4),
         "is_malignant": is_malignant,
-        "model_info": f"{_model_label(model)} transfer learning on IDC Histopathology Dataset",
+        "model_predictions": probs,
+        "ensemble_method": "average_probability",
         "img_size_used": f"{IMG_SIZE[0]}x{IMG_SIZE[1]}",
         "threshold_used": round(float(threshold), 3),
     }
+
     if gradcam_overlay is not None:
         response["gradcam_overlay_base64"] = gradcam_overlay
+
     return response
 
 
 def get_model_info() -> dict:
-    """Return model metadata."""
-    model = load_model()
-    if model is None:
-        return {"status": "not_loaded", "message": "Run train.py to train the model first."}
+    models = load_model()
+
+    if not models:
+        return {"status": "not_loaded"}
+
+    info = {}
+
+    for name, model in models.items():
+        info[name] = {
+            "architecture": model.name,
+            "input_shape": list(model.input_shape),
+            "total_params": model.count_params(),
+        }
 
     return {
         "status": "loaded",
-        "architecture": _model_label(model),
+        "models_loaded": list(models.keys()),
+        "model_details": info,
         "dataset": "IDC Histopathology (Kaggle)",
-        "classes": ["Benign (IDC-)", "Malignant (IDC+)"],
-        "input_shape": list(model.input_shape),
-        "total_params": model.count_params(),
-        "model_path": MODEL_PATH,
+        "classes": ["Benign", "Malignant"]
     }
