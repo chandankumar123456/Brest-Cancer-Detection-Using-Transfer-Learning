@@ -151,7 +151,7 @@ EfficientNet was chosen specifically because it achieves state-of-the-art accura
 | Image size | 50×50 pixels (RGB PNG) |
 | Magnification | 40× |
 | Origin | Extracted from 162 whole-mount slide images of breast cancer specimens |
-| Classes | **Class 0 (Benign)**: ~157,000 patches — **Class 1 (Malignant/IDC+)**: ~120,000 patches |
+| Classes | **Class 0 (Benign)**: approximately 157,000 patches — **Class 1 (Malignant/IDC+)**: approximately 120,000 patches |
 | Class ratio | Approximately 57% benign / 43% malignant |
 
 ### Folder Structure on Disk
@@ -353,22 +353,22 @@ Training is implemented in `train.py` and uses a **3-phase progressive fine-tuni
 The `BinaryFocalLoss` class in `train.py` implements:
 
 ```
-Focal Loss = -α_t × (1 - p_t)^γ × BCE(y, ŷ)
+Focal Loss = -alpha_t * (1 - p_t)^gamma * BCE(y, y_hat)
 ```
 
 Where:
-- `γ (gamma) = 2.0` — Focusing parameter. Higher values increase focus on hard samples.
-- `α (alpha) = 0.35` — Class balance factor. Values < 0.5 slightly favor the malignant class.
+- `gamma = 2.0` — Focusing parameter. Higher values increase focus on hard samples.
+- `alpha = 0.35` — Class balance factor. Values < 0.5 slightly favor the malignant class.
 - `p_t` — The model's estimated probability for the true class.
 
-When a sample is correctly classified with high confidence, `(1 - p_t)^γ` becomes very small, effectively down-weighting the loss for easy examples. This is critical for the IDC dataset where many patches are trivially classifiable.
+When a sample is correctly classified with high confidence, `(1 - p_t)^gamma` becomes very small, effectively down-weighting the loss for easy examples. This is critical for the IDC dataset where many patches are trivially classifiable.
 
 ### Class Weighting
 
 The `compute_class_weights()` function calculates inverse-frequency weights:
 
 ```python
-w_class = total_samples / (2 × count_class)
+w_class = total_samples / (2 * count_class)
 ```
 
 For the typical IDC dataset distribution (~57% benign, ~43% malignant), this produces weights of approximately:
@@ -854,7 +854,7 @@ The 3-phase approach addresses both issues:
 
 ### Why Focal Loss Instead of Standard BCE
 
-The IDC dataset has a ~57/43 benign/malignant split. While not extreme, standard BCE treats all samples equally. Focal loss with γ=2.0 down-weights easy samples exponentially, forcing the model to focus on ambiguous patches near the decision boundary. Combined with class weighting, this produces better calibrated predictions.
+The IDC dataset has a ~57/43 benign/malignant split. While not extreme, standard BCE treats all samples equally. Focal loss with gamma=2.0 down-weights easy samples exponentially, forcing the model to focus on ambiguous patches near the decision boundary. Combined with class weighting, this produces better calibrated predictions.
 
 ### Why Ensemble Averaging
 
@@ -957,7 +957,7 @@ Classify a histopathology image as benign or malignant.
 
 **Constraints:** JPEG/PNG/BMP/TIFF/WebP only, ≤20 MB.
 
-**Response:** See [Expected Outputs → Inference Outputs](#inference-outputs).
+**Response:** See [Expected Outputs](#11-expected-outputs) section for response format.
 
 ### `POST /recommend-hospitals`
 
@@ -974,7 +974,7 @@ Get nearby hospital recommendations based on location and diagnosis.
 
 **Constraints:** `radius_km` must be between 5 and 200.
 
-**Response:** See [Expected Outputs → Inference Outputs](#inference-outputs).
+**Response:** See [Expected Outputs](#11-expected-outputs) section for response format.
 
 ---
 
