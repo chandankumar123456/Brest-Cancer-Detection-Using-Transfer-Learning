@@ -281,6 +281,50 @@ Full Dataset (277,524 images or fraction thereof)
 
 ## 7. Evaluation & Metrics
 
+### Test Set Results (EfficientNet-B7)
+
+Model evaluated on **9,714 held-out test samples** (35% data fraction, 80/10/10 split). Optimal classification threshold (**0.4627**) selected by maximizing F1 on the validation set.
+
+| Metric | Score |
+|---|---|
+| **Accuracy** | **95.64%** |
+| **AUC-ROC** | **0.9912** |
+| **Macro F1** | **0.9533** |
+| **Weighted F1** | **0.9563** |
+| **Optimal Threshold** | 0.4627 |
+
+### Per-Class Breakdown
+
+| Class | Precision | Recall | F1-Score | Support |
+|---|---|---|---|---|
+| **Benign (IDC−)** | 0.9641 | 0.9663 | 0.9652 | 6,083 |
+| **Malignant (IDC+)** | 0.9433 | 0.9397 | 0.9415 | 3,631 |
+
+### Confusion Matrix
+
+|  | Predicted Benign | Predicted Malignant |
+|---|---|---|
+| **Actual Benign** | 5,878 (96.6%) | 205 (3.4%) |
+| **Actual Malignant** | 219 (6.0%) | 3,412 (94.0%) |
+
+<p align="center">
+  <img src="backend/saved_model/confusion_matrix.png" alt="Confusion Matrix" width="480">
+</p>
+
+### Training History
+
+Accuracy, Loss, and AUC-ROC curves across the 3-phase training pipeline (9 epochs total):
+
+<p align="center">
+  <img src="backend/saved_model/training_history.png" alt="Training History" width="900">
+</p>
+
+### Per-Class Metrics Comparison
+
+<p align="center">
+  <img src="backend/saved_model/class_metrics.png" alt="Per-Class Metrics" width="600">
+</p>
+
 ### Metrics Tracked During Training
 
 | Metric | Description |
@@ -291,7 +335,7 @@ Full Dataset (277,524 images or fraction thereof)
 | **Precision** | True Positives / (True Positives + False Positives) |
 | **Recall** | True Positives / (True Positives + False Negatives) |
 
-### Post-Training Evaluation
+### Post-Training Evaluation Pipeline
 
 After all three training phases:
 
@@ -301,8 +345,10 @@ After all three training phases:
 
 3. **Outputs Generated**:
    - `saved_model/breast_cancer_model.keras` — Best model checkpoint
-   - `saved_model/metrics_report.json` — JSON with F1, accuracy, precision/recall per class
+   - `saved_model/metrics_report.json` — JSON with all metrics (F1, accuracy, precision/recall per class, confusion matrix)
    - `saved_model/confusion_matrix.png` — Visual confusion matrix heatmap
+   - `saved_model/training_history.png` — Accuracy, Loss, AUC curves over epochs
+   - `saved_model/class_metrics.png` — Per-class precision/recall/F1 bar chart
 
 ### Callbacks Used
 
@@ -412,9 +458,14 @@ Breast Cancer Detection/
 │   ├── hospital_recommender.py    # Geocoding, hospital search, LLM summarization
 │   ├── dummy_model_gen.py         # Utility to generate lightweight dummy models for testing
 │   ├── requirements.txt           # Python dependencies
-│   └── saved_model/               # Pre-trained models (included in repo)
+│   ├── generate_metrics.py         # Generate evaluation metrics, plots, and confusion matrix
+│   └── saved_model/               # Pre-trained models & evaluation outputs (included in repo)
 │       ├── model_B0.keras         # Trained EfficientNetB0 weights
-│       └── model_B7.keras         # Trained EfficientNetB7 weights
+│       ├── model_B7.keras         # Trained EfficientNetB7 weights
+│       ├── metrics_report.json    # Full evaluation metrics in JSON format
+│       ├── confusion_matrix.png   # Confusion matrix heatmap
+│       ├── training_history.png   # Training curves (accuracy, loss, AUC)
+│       └── class_metrics.png      # Per-class precision/recall/F1 chart
 ├── frontend/
 │   ├── index.html                 # Main UI — upload, results, info sections
 │   ├── styles.css                 # Complete design system (glassmorphism, animations, responsive)
@@ -433,6 +484,7 @@ Breast Cancer Detection/
 | `train.py` | Downloads dataset from Kaggle, runs 3-phase transfer learning, evaluates on test set, saves model + metrics. |
 | `hospital_recommender.py` | Geocodes location via Nominatim, queries OpenStreetMap for hospitals, generates LLM summary. |
 | `dummy_model_gen.py` | Creates small dummy `.keras` files for testing without real training. |
+| `generate_metrics.py` | Generates evaluation charts (confusion matrix, training curves, per-class metrics) and `metrics_report.json`. |
 | `app.js` | Handles drag-drop upload, calls `/predict` API, renders results with animations. |
 | `index.html` | Full UI with upload zone, results panel, Grad-CAM display, hospital recommendation form. |
 | `styles.css` | Glassmorphism design system with dark theme, animations, and responsive layout. |
