@@ -89,12 +89,20 @@ def _find_last_conv_layer_name(model: tf.keras.Model) -> str | None:
     return None
 
 
-def _make_gradcam_overlay(
+def _jet_colormap(value: np.ndarray) -> np.ndarray:
+    """Apply a jet-like colormap to a [0,1] float array → (H, W, 3) uint8 RGB."""
+    v = np.clip(value, 0.0, 1.0)
+    r = np.clip(1.5 - np.abs(v - 0.75) * 4.0, 0.0, 1.0)
+    g = np.clip(1.5 - np.abs(v - 0.50) * 4.0, 0.0, 1.0)
+    b = np.clip(1.5 - np.abs(v - 0.25) * 4.0, 0.0, 1.0)
+    return np.stack([r, g, b], axis=-1)
+
+
+def _make_gradcam_heatmap(
     model: tf.keras.Model,
     input_tensor: np.ndarray,
-    alpha: float = 0.35,
-) -> str | None:
-    """Create Grad-CAM heatmap overlay and return base64 PNG string."""
+) -> np.ndarray | None:
+    """Compute the raw Grad-CAM heatmap (H, W) in [0, 1]. Returns None on failure."""
     last_conv_layer_name = _find_last_conv_layer_name(model)
     if last_conv_layer_name is None:
         logger.warning("Could not locate a Conv2D layer for Grad-CAM")
@@ -117,6 +125,7 @@ def _make_gradcam_overlay(
 
     grads = tape.gradient(class_channel, conv_outputs)
     if grads is None:
+        logger.warning("Grad-CAM: gradients are None")
         return None
 
     pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
@@ -125,25 +134,50 @@ def _make_gradcam_overlay(
     heatmap = tf.maximum(heatmap, 0)
     max_val = tf.reduce_max(heatmap)
     if float(max_val) <= 0:
+        logger.warning("Grad-CAM: max activation is 0")
         return None
+
     heatmap = heatmap / max_val
     heatmap = tf.image.resize(heatmap[..., tf.newaxis], IMG_SIZE).numpy().squeeze()
+    return heatmap
 
-    # Compose an RGB red heat overlay using PIL only (keeps dependencies light).
-    base_img = np.uint8(np.clip(input_tensor[0] * 255.0, 0, 255))
-    overlay = base_img.astype(np.float32)
-    overlay[..., 0] = np.clip(
-        (1.0 - alpha * heatmap) * overlay[..., 0] + alpha * 255.0 * heatmap,
-        0,
-        255,
-    )
-    overlay[..., 1] = np.clip((1.0 - alpha * heatmap) * overlay[..., 1], 0, 255)
-    overlay[..., 2] = np.clip((1.0 - alpha * heatmap) * overlay[..., 2], 0, 255)
 
-    out_img = Image.fromarray(overlay.astype(np.uint8), mode="RGB")
+def _encode_image(img_array: np.ndarray) -> str:
+    """Encode a uint8 RGB numpy array to base64 PNG."""
+    out_img = Image.fromarray(img_array.astype(np.uint8), mode="RGB")
     buffer = io.BytesIO()
     out_img.save(buffer, format="PNG")
     return base64.b64encode(buffer.getvalue()).decode("utf-8")
+
+
+def _make_gradcam_images(
+    model: tf.keras.Model,
+    input_tensor: np.ndarray,
+    alpha: float = 0.5,
+) -> dict | None:
+    """
+    Generate Grad-CAM visualisations.
+    Returns dict with 'overlay' (base64 PNG of heatmap on image)
+    and 'heatmap' (standalone colormapped heatmap), or None.
+    """
+    heatmap = _make_gradcam_heatmap(model, input_tensor)
+    if heatmap is None:
+        return None
+
+    base_img = np.clip(input_tensor[0] * 255.0, 0, 255).astype(np.uint8)
+
+    # Build jet-colormapped heatmap image (0-255)
+    colormap = (_jet_colormap(heatmap) * 255.0).astype(np.uint8)
+
+    # Overlay: blend original image with colormapped heatmap
+    blended = (base_img.astype(np.float32) * (1 - alpha)
+               + colormap.astype(np.float32) * alpha)
+    overlay = np.clip(blended, 0, 255).astype(np.uint8)
+
+    return {
+        "overlay": _encode_image(overlay),
+        "heatmap": _encode_image(colormap),
+    }
 
 
 def predict(image_bytes: bytes, include_heatmap: bool = False, threshold: float = DEFAULT_THRESHOLD) -> dict:
@@ -176,10 +210,14 @@ def predict(image_bytes: bytes, include_heatmap: bool = False, threshold: float 
     label = "Malignant" if is_malignant else "Benign"
     confidence = idc_positive_prob if is_malignant else idc_negative_prob
 
-    # GradCAM will use the largest model (B7) if available
-    gradcam_overlay = None
-    if include_heatmap and "B7" in models:
-        gradcam_overlay = _make_gradcam_overlay(models["B7"], input_tensor)
+    # Grad-CAM: prefer B7, then B3, then B0
+    gradcam_result = None
+    if include_heatmap:
+        for variant in ("B7", "B3", "B0"):
+            if variant in models:
+                gradcam_result = _make_gradcam_images(models[variant], input_tensor)
+                if gradcam_result is not None:
+                    break
 
     response = {
         "prediction": label,
@@ -193,8 +231,9 @@ def predict(image_bytes: bytes, include_heatmap: bool = False, threshold: float 
         "threshold_used": round(float(threshold), 3),
     }
 
-    if gradcam_overlay is not None:
-        response["gradcam_overlay_base64"] = gradcam_overlay
+    if gradcam_result is not None:
+        response["gradcam_overlay_base64"] = gradcam_result["overlay"]
+        response["gradcam_heatmap_base64"] = gradcam_result["heatmap"]
 
     return response
 
