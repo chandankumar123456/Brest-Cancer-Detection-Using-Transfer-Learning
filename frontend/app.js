@@ -1,5 +1,5 @@
 /**
- * app.js — OnchoScan AI Frontend Logic
+ * app.js — Breast Cancer Image Classification Based on Deep Transfer Learning — Frontend Logic
  * Handles drag-drop upload, API calls, and animated results display
  */
 
@@ -220,14 +220,20 @@ function displayResults(data) {
   document.getElementById('meta-filename').textContent = data.filename || 'unknown';
   document.getElementById('meta-imgsize').textContent  = data.img_size_used || '224×224';
 
-  // Explainability image (Grad-CAM)
+  // Explainability images (Grad-CAM)
   const explainabilitySection = document.getElementById('explainability-section');
   const gradcamImage = document.getElementById('gradcam-image');
+  const gradcamHeatmap = document.getElementById('gradcam-heatmap');
   if (data.gradcam_overlay_base64) {
     gradcamImage.src = `data:image/png;base64,${data.gradcam_overlay_base64}`;
+    gradcamHeatmap.src = data.gradcam_heatmap_base64
+      ? `data:image/png;base64,${data.gradcam_heatmap_base64}`
+      : '';
+    gradcamHeatmap.parentElement.classList.toggle('hidden', !data.gradcam_heatmap_base64);
     explainabilitySection.classList.remove('hidden');
   } else {
     gradcamImage.src = '';
+    gradcamHeatmap.src = '';
     explainabilitySection.classList.add('hidden');
   }
 
@@ -258,13 +264,15 @@ async function fetchHospitalRecommendations() {
   const location = (locationInput.value || '').trim();
   if (!location) {
     showToast('Please enter your city or area first.', 'error');
+    locationInput.focus();
     return;
   }
 
-  const diagnosis = latestPredictionLabel || 'Unknown';
-  hospitalStatus.textContent = 'Fetching nearby hospitals and generating LLM recommendation...';
+  const diagnosis = latestPredictionLabel || 'General Screening';
+  hospitalStatus.textContent = 'Searching for nearby hospitals...';
   hospitalStatus.classList.remove('hidden');
   hospitalSummary.classList.add('hidden');
+  hospitalList.innerHTML = '';
   hospitalList.classList.add('hidden');
   recommendBtn.disabled = true;
 
@@ -282,15 +290,17 @@ async function fetchHospitalRecommendations() {
     }
 
     const data = await res.json();
-    hospitalStatus.textContent = `Recommendations ready (${data.hospitals.length} hospitals found)`;
-    hospitalSummary.textContent = data.summary || 'No LLM summary available.';
+    hospitalStatus.textContent = `${data.hospitals.length} hospital${data.hospitals.length !== 1 ? 's' : ''} found near ${data.location?.resolved_name || location}`;
+    hospitalSummary.textContent = data.summary || 'No recommendation summary available.';
     hospitalSummary.classList.remove('hidden');
     renderHospitalCards(data.hospitals || []);
-    showToast('Hospital recommendations generated successfully.', 'ok');
+    showToast(`Found ${data.hospitals.length} hospitals near your location.`, 'ok', 4000);
   } catch (err) {
     const msg = err.message || 'Failed to fetch recommendations.';
     hospitalStatus.textContent = `Error: ${msg}`;
-    showToast(`Hospital recommendation failed: ${msg}`, 'error', 5000);
+    hospitalSummary.classList.add('hidden');
+    hospitalList.classList.add('hidden');
+    showToast(`Hospital search failed: ${msg}`, 'error', 5000);
   } finally {
     recommendBtn.disabled = false;
   }
