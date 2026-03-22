@@ -48,8 +48,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Breast Cancer Detection API",
-    description="AI-powered breast cancer detection using EfficientNet transfer learning on IDC histopathology images.",
+    title="Breast Cancer Image Classification API",
+    description="Breast cancer image classification method based on deep transfer learning using EfficientNet on IDC histopathology images.",
     version="1.0.0",
     lifespan=lifespan,
 )
