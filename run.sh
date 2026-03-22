@@ -1,12 +1,12 @@
 #!/bin/bash
-# run.sh — Start the OnchoScan AI Backend Server
+# run.sh — Start the Breast Cancer Image Classification Based on Deep Transfer Learning Backend Server
 set -e
 
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 VENV="$PROJECT_DIR/venv"
 
-echo "🔬 OnchoScan AI — Breast Cancer Detection"
-echo "========================================="
+echo "🔬 Breast Cancer Image Classification — Deep Transfer Learning"
+echo "============================================================="
 
 # Activate venv
 if [ -d "$VENV" ]; then
