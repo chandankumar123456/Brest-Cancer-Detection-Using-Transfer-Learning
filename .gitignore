@@ -17,7 +17,7 @@ venv/
 # Logs and artifacts
 *.log
 backend/logs/
-backend/saved_model/
+startup_log.txt
 
 # Jupyter
 .ipynb_checkpoints/
