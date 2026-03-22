@@ -49,7 +49,7 @@ def geocode_location(location_query: str) -> tuple[float, float, str]:
     """Resolve free-text location to latitude/longitude using Nominatim."""
     params = urllib.parse.urlencode({"q": location_query, "format": "json", "limit": 1})
     url = f"{NOMINATIM_URL}?{params}"
-    headers = {"User-Agent": "OnchoScanAI/1.0 (breast-cancer-research)"}
+    headers = {"User-Agent": "BreastCancerClassification/1.0 (breast-cancer-research)"}
     results = _http_get_json(url, headers=headers, timeout=15)
 
     if not isinstance(results, list) or len(results) == 0:
