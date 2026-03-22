@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OnchoScan AI — Breast Cancer Detection</title>
-  <meta name="description" content="AI-powered breast cancer detection from histopathology images using EfficientNetB7 deep learning. Fast, accurate, and reliable diagnosis support." />
+  <title>Breast Cancer Image Classification — Deep Transfer Learning</title>
+  <meta name="description" content="Breast cancer image classification method based on deep transfer learning using EfficientNet on IDC histopathology images." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -29,22 +29,23 @@
           <circle cx="14" cy="14" r="3" fill="url(#g1)"/>
           <defs>
             <linearGradient id="g1" x1="0" y1="0" x2="28" y2="28">
-              <stop stop-color="#a855f7"/>
-              <stop offset="1" stop-color="#06b6d4"/>
+              <stop stop-color="#6366f1"/>
+              <stop offset="1" stop-color="#0ea5e9"/>
             </linearGradient>
             <linearGradient id="g2" x1="0" y1="0" x2="28" y2="28">
-              <stop stop-color="#a855f7"/>
-              <stop offset="1" stop-color="#06b6d4"/>
+              <stop stop-color="#6366f1"/>
+              <stop offset="1" stop-color="#0ea5e9"/>
             </linearGradient>
           </defs>
         </svg>
       </div>
-      <span class="brand-name">OnchoScan <span class="brand-ai">AI</span></span>
+      <span class="brand-name">Breast Cancer Image Classification <span class="brand-ai">Based on Deep Transfer Learning</span></span>
     </div>
 
     <div class="nav-links" role="list">
       <a href="#upload" class="nav-link" role="listitem">Analyze</a>
       <a href="#about" class="nav-link" role="listitem">About</a>
+      <a href="#hospital-section" class="nav-link" role="listitem">Hospitals</a>
       <a href="#how-it-works" class="nav-link" role="listitem">How It Works</a>
     </div>
 
@@ -62,8 +63,8 @@
         Powered by EfficientNetB7 Transfer Learning
       </div>
       <h1 class="hero-title">
-        Detect Breast Cancer<br />
-        <span class="gradient-text">with Clinical-Grade AI</span>
+        Breast Cancer Image Classification<br />
+        <span class="gradient-text">Based on Deep Transfer Learning</span>
       </h1>
       <p class="hero-subtitle">
         Upload histopathology slide images for instant AI analysis. Our model, 
@@ -124,8 +125,8 @@
                 <path d="M18 38h20" stroke="url(#dg)" stroke-width="2" stroke-linecap="round"/>
                 <defs>
                   <linearGradient id="dg" x1="0" y1="0" x2="56" y2="56">
-                    <stop stop-color="#a855f7"/>
-                    <stop offset="1" stop-color="#06b6d4"/>
+                    <stop stop-color="#6366f1"/>
+                    <stop offset="1" stop-color="#0ea5e9"/>
                   </linearGradient>
                 </defs>
               </svg>
@@ -172,10 +173,10 @@
         <div id="results-empty" class="results-empty">
           <div class="results-empty-icon" aria-hidden="true">
             <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-              <circle cx="32" cy="32" r="30" stroke="rgba(168,85,247,0.3)" stroke-width="2"/>
-              <circle cx="32" cy="32" r="20" stroke="rgba(168,85,247,0.2)" stroke-width="2"/>
-              <circle cx="32" cy="32" r="10" stroke="rgba(168,85,247,0.2)" stroke-width="2"/>
-              <circle cx="32" cy="32" r="4" fill="rgba(168,85,247,0.4)"/>
+              <circle cx="32" cy="32" r="30" stroke="rgba(99,102,241,0.2)" stroke-width="2"/>
+              <circle cx="32" cy="32" r="20" stroke="rgba(99,102,241,0.15)" stroke-width="2"/>
+              <circle cx="32" cy="32" r="10" stroke="rgba(99,102,241,0.15)" stroke-width="2"/>
+              <circle cx="32" cy="32" r="4" fill="rgba(99,102,241,0.3)"/>
             </svg>
           </div>
           <h2 id="results-heading" class="results-empty-title">Awaiting Analysis</h2>
@@ -275,26 +276,23 @@
           <div id="explainability-section" class="explainability-section hidden">
             <h3 class="section-subtitle">Grad-CAM Explainability</h3>
             <p class="explainability-note">Highlighted regions indicate tissue areas that most influenced the model prediction.</p>
-            <img id="gradcam-image" class="gradcam-image" src="" alt="Grad-CAM heatmap overlay" />
-          </div>
-
-          <!-- Hospital Recommendations -->
-          <div id="hospital-section" class="hospital-section">
-            <h3 class="section-subtitle">Hospital Recommendation (LLM Assisted)</h3>
-            <p class="hospital-note">Enter your city or area to get nearby hospitals and AI-generated follow-up guidance.</p>
-            <div class="hospital-form-row">
-              <input
-                id="location-input"
-                class="location-input"
-                type="text"
-                placeholder="e.g., Hyderabad, Telangana"
-                aria-label="Enter your city or area for hospital recommendations"
-              />
-              <button id="recommend-btn" class="btn btn-outline" type="button">Find Hospitals</button>
+            <div class="gradcam-grid">
+              <div class="gradcam-card">
+                <span class="gradcam-label">Heatmap Overlay</span>
+                <img id="gradcam-image" class="gradcam-image" src="" alt="Grad-CAM heatmap overlay on original image" />
+              </div>
+              <div class="gradcam-card">
+                <span class="gradcam-label">Activation Heatmap</span>
+                <img id="gradcam-heatmap" class="gradcam-image" src="" alt="Standalone Grad-CAM activation heatmap" />
+              </div>
             </div>
-            <p id="hospital-status" class="hospital-status hidden" aria-live="polite"></p>
-            <div id="hospital-summary" class="hospital-summary hidden"></div>
-            <div id="hospital-list" class="hospital-list hidden"></div>
+            <div class="gradcam-legend">
+              <div class="legend-bar"></div>
+              <div class="legend-labels">
+                <span>Low attention</span>
+                <span>High attention</span>
+              </div>
+            </div>
           </div>
 
           <!-- Re-analyze -->
@@ -314,6 +312,35 @@
       </section>
     </div>
   </main>
+
+  <!-- Hospital Recommendations — Standalone Section -->
+  <section id="hospital-section" class="info-section hospital-standalone" aria-labelledby="hospital-heading">
+    <div class="info-container">
+      <h2 id="hospital-heading" class="section-title gradient-text">Find Nearby Hospitals</h2>
+      <p class="hospital-intro">Enter your current location to find nearby hospitals with oncology and breast cancer treatment facilities. Results are fetched from OpenStreetMap with AI-generated follow-up guidance.</p>
+      <div class="hospital-search-card glass-card">
+        <div class="hospital-form-row">
+          <input
+            id="location-input"
+            class="location-input"
+            type="text"
+            placeholder="e.g., Hyderabad, Telangana"
+            aria-label="Enter your city or area for hospital recommendations"
+          />
+          <button id="recommend-btn" class="btn btn-primary" type="button">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M13 13l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            Find Hospitals
+          </button>
+        </div>
+        <p id="hospital-status" class="hospital-status hidden" aria-live="polite"></p>
+        <div id="hospital-summary" class="hospital-summary hidden"></div>
+        <div id="hospital-list" class="hospital-list hidden"></div>
+      </div>
+    </div>
+  </section>
 
   <!-- How It Works -->
   <section id="how-it-works" class="info-section" aria-labelledby="how-heading">
@@ -377,8 +404,8 @@
   <footer class="footer glass-card" role="contentinfo">
     <div class="footer-content">
       <div class="footer-brand">
-        <span class="brand-name">OnchoScan <span class="brand-ai">AI</span></span>
-        <p class="footer-tagline">Advanced AI for breast cancer detection research</p>
+        <span class="brand-name">Breast Cancer Image Classification <span class="brand-ai">Based on Deep Transfer Learning</span></span>
+        <p class="footer-tagline">Breast cancer image classification using deep transfer learning</p>
       </div>
       <div class="footer-disclaimer" role="note">
         <p>
@@ -388,7 +415,8 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <p>Built with EfficientNetB7 · FastAPI · TensorFlow · © 2026 OnchoScan AI</p>
+      <p>Built with EfficientNetB7 · FastAPI · TensorFlow · © 2026 Breast Cancer Image Classification
+Based on Deep Transfer Learning</p>
     </div>
   </footer>
 
